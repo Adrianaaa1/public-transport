@@ -55,4 +55,5 @@ dkms.conf
 out
 **/build
 *.bak
+~*.docx
 
