@@ -14,7 +14,22 @@ struct configuration {
 	char password[128];
 };
 
-extern struct configuration conf;
+static inline int min_int(int a, int b) {
+	return a < b ? a : b;
+};
+
+static inline MYSQL *STDCALL my_mysql_real_connect(MYSQL *mysql, struct configuration* conf) {
+	return mysql_real_connect(
+		mysql, 
+		conf->host, 
+		conf->username,
+		conf->password,
+		conf->database,
+		conf->port,
+		NULL,
+		CLIENT_MULTI_STATEMENTS | CLIENT_MULTI_RESULTS
+	);
+}
 
 extern int parse_config(char *path, struct configuration *conf);
 extern char *getInput(unsigned int lung, char *stringa, bool hide);

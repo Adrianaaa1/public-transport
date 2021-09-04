@@ -1,149 +1,127 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mysql.h>
 
 #include "defines.h"
 
-typedef enum {
-	AMMINISTRATORE = 1,
-	CONDUCENTE=2,
-	PASSEGGERO=3,
-} role_t;
+static void login(MYSQL* conn);
+static uint8_t attempt_login(MYSQL* conn, const char* username, const char* password);
 
+static struct configuration conf = {
+	.host = "localhost",
+	.username = "root",
+	.password = "password",
+	.database = "sistematrasportopubblico3",
+	.port = 3306,
+};
 
-struct configuration conf;
+static struct login_info {
+	char* login_message;
+	uint8_t role_id;
+	void (*run_as_role)(MYSQL*);
+} login_info[4] = {
+	{ .login_message = "Impossibile efettuare il login, le credenziali potrebbero essere errate.", .run_as_role = login },
+	{ .role_id = 1, .login_message = "Connessione riuscita come amministratore", .run_as_role = run_as_administrator },
+	{ .role_id = 2, .login_message = "Connessione riuscita come conducente", .run_as_role = run_as_conducente },
+	{ .role_id = 3, .login_message = "Connessione riuscita come passeggero", .run_as_role = run_as_passeggero }
+};
 
-static MYSQL* conn;
+int main(int argc, const char* argv[]) {
+	MYSQL* conn;
+	if ((conn = mysql_init(NULL)) == NULL) {
+		fprintf(stderr, "mysql_init() failed (probably out of memory)\n");
+		goto fail;
+	}
+	if (my_mysql_real_connect(conn, &conf) == NULL) {
+		print_error(conn, "mysql_real_connect() failed\n");
+		goto fail2;
+	}
+	int choise;
+	printf("\nSistema di trasporto pubblico\n\n");
+	while (true) {
+		printf("Seleziona operazione\n\
+				\r1) Login\n\
+				\r2) Esci\n\
+				\r> "
+		);
+		scanf_s("%d", &choise);
+		switch (choise) {
+		case 1:
+			login(conn);
+			break;
+		case 2:
+			mysql_close(conn);
+			return EXIT_SUCCESS;
+		}
+	}
+fail2:
+	mysql_close(conn);
+fail:
+	return EXIT_FAILURE;
+}
 
+void login(MYSQL* conn) {
+	uint8_t role_id;
+	char username[25];
+	char password[25];
+	printf("\nLogin\n\n");
+	printf("Username: ");
+	scanf_s("%s", &username, (unsigned int)sizeof username);
+	printf("Password: ");
+	scanf_s("%s", &password, (unsigned int)sizeof password);
+	role_id = attempt_login(conn, username, password);
+	uint8_t login_info_index = 0;
+	for (uint8_t i = 0; i < sizeof login_info / sizeof * login_info; i++) {
+		if (login_info[i].role_id == role_id) {
+			login_info_index = i;
+		}
+	}
+	printf("\n%s\n", login_info[login_info_index].login_message);
+	login_info[login_info_index].run_as_role(conn);
+}
 
-static role_t attempt_login(MYSQL* conn, char* username, char* password)
-{
-	MYSQL_STMT *login_procedure;
-
-	MYSQL_BIND param[3]; // Used both for input and output
-	int role = 0;
-
+static uint8_t attempt_login(MYSQL* conn, const char* username, const char* password) {
+	int role;
+	MYSQL_STMT* login_procedure;
+	MYSQL_BIND in_param[3];
+	MYSQL_BIND out_param[1];
+	memset(in_param, 0, sizeof in_param);
+	memset(out_param, 0, sizeof out_param);
+	in_param[0].buffer_type = MYSQL_TYPE_VAR_STRING;
+	in_param[0].buffer = (void*)username;
+	in_param[0].buffer_length = strlen(username);
+	in_param[1].buffer_type = MYSQL_TYPE_VAR_STRING;
+	in_param[1].buffer = (void*)password;
+	in_param[1].buffer_length = strlen(password);
+	out_param[0].buffer_type = MYSQL_TYPE_LONG;
+	out_param[0].buffer = &role;
+	out_param[0].buffer_length = sizeof role;
 	if (!setup_prepared_stmt(&login_procedure, "call Login(?, ?, ?)", conn)) {
 		print_stmt_error(login_procedure, "Unable to initialize login statement\n");
-		
+		goto fail;
 	}
-
-	// Prepare parameters
-	memset(param, 0, sizeof(param));
-
-	param[0].buffer_type = MYSQL_TYPE_VAR_STRING; // IN
-	param[0].buffer = username;
-	param[0].buffer_length = strlen(username);
-
-	param[1].buffer_type = MYSQL_TYPE_VAR_STRING; // IN
-	param[1].buffer = password;
-	param[1].buffer_length = strlen(password);
-
-	param[2].buffer_type = MYSQL_TYPE_LONG; // OUT
-	param[2].buffer = &role;
-	param[2].buffer_length = sizeof(role);
-
-	if (mysql_stmt_bind_param(login_procedure, param) != 0) { // Note _param
+	if (mysql_stmt_bind_param(login_procedure, in_param) != 0) {
 		print_stmt_error(login_procedure, "Could not bind parameters for login");
 		goto err;
 	}
-
-	// Run procedure
 	if (mysql_stmt_execute(login_procedure) != 0) {
 		print_stmt_error(login_procedure, "Could not execute login procedure");
 		goto err;
 	}
-
-	// Prepare output parameters
-	memset(param, 0, sizeof(param));
-	param[0].buffer_type = MYSQL_TYPE_LONG; // OUT
-	param[0].buffer = &role;
-	param[0].buffer_length = sizeof(role);
-	if (mysql_stmt_bind_result(login_procedure, param)) {
+	if (mysql_stmt_bind_result(login_procedure, out_param)) {
 		print_stmt_error(login_procedure, "Could not retrieve output parameter");
 		goto err;
 	}
-
-	// Retrieve output parameter
 	if (mysql_stmt_fetch(login_procedure)) {
 		print_stmt_error(login_procedure, "Could not buffer results");
 		goto err;
 	}
-
 	mysql_stmt_close(login_procedure);
 	return role;
-
 err:
 	mysql_stmt_close(login_procedure);
-
-}
-
-
-main(void) {
-	printf("	**************	Benevenuto nel nuovo sistema di trasporto pubblico di Ivan Palmieri	**************\n\n\n");
-	role_t role;
-	conn = mysql_init(NULL);
-	if (conn == NULL) {
-		fprintf(stderr, "mysql_init() failed (probably out of memory)\n");
-		exit(EXIT_FAILURE);
-	}
-	/*si connette*/
-	if (mysql_real_connect(conn, "localhost", "root", conf.db_password, "sistematrasportopubblico3", conf.port, NULL, CLIENT_MULTI_STATEMENTS | CLIENT_MULTI_RESULTS) == NULL) {
-		fprintf(stderr, "mysql_real_connect() failed\n");
-		mysql_close(conn);
-		exit(EXIT_FAILURE);
-	}
-	char us[25];
-	char pass[25];
-	int choise;
-	while (true)
-	{
-		printf("*** Cosa vuoi fare? *** \n");
-		printf("1) Login\n");
-		printf("2) Esci\n");
-		printf("SCELTA: ");
-		scanf_s("%i", &choise);
-		switch (choise) 
-		{
-		case 1:
-			printf("---------------------------------------------------------Login-----------------------------------------------------\n");
-			printf("Username: ");
-			scanf_s("%s", &us);
-			printf("Password: ");
-			scanf_s("%s", &pass);
-			printf("--------------------------------------------------------------------------------------------------------------------\n");
-			role = attempt_login(conn, us, pass);
-			switch (role) 
-			{
-			case PASSEGGERO:
-				printf("Connessione riuscita come passeggero\n");
-				run_as_passeggero(conn);
-				break;
-
-			case CONDUCENTE:
-				printf("Connessione riuscita come conducente\n");
-				run_as_conducente(conn);
-				break;
-
-			case AMMINISTRATORE:
-				printf("Connessione riuscita come amministratore\n");
-				run_as_administrator(conn);
-				break;
-			default:
-				printf("Credenziali sbagliate\n");
-				
-			}
-			break;
-		case 2:
-			printf("----------------------------------------------------------------------------------------------------------------------\n");
-			printf("Bye!\n");
-			system("pause");
-			mysql_close(conn);
-			return;
-		}
-		
-
-
-	}
+fail:
+	return 0;
 }
