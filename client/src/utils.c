@@ -34,7 +34,7 @@ bool setup_prepared_stmt(MYSQL_STMT** stmt, char* statement, MYSQL* conn) {
 		print_error(conn, "Could not initialize statement handler");
 		return false;
 	}
-	if (mysql_stmt_prepare(*stmt, statement, strlen(statement)) != 0) {
+	if (mysql_stmt_prepare(*stmt, statement, (unsigned long)strlen(statement)) != 0) {
 		print_stmt_error(*stmt, "Could not prepare statement");
 		return false;
 	}
@@ -86,7 +86,7 @@ static void dump_result_set_header(MYSQL_RES* res_set)
 
 	for (i = 0; i < mysql_num_fields(res_set); i++) {
 		field = mysql_fetch_field(res_set);
-		col_len = strlen(field->name);
+		col_len = (unsigned long)strlen(field->name);
 
 		if (col_len < field->max_length)
 			col_len = field->max_length;
@@ -191,7 +191,7 @@ void dump_result_set(MYSQL* conn, MYSQL_STMT* stmt, char* title)
 			// Setup the binding for the current parameter
 			rs_bind[i].buffer_type = fields[i].type;
 			rs_bind[i].buffer = malloc(attr_size + 1);
-			rs_bind[i].buffer_length = attr_size + 1;
+			rs_bind[i].buffer_length = (unsigned long)attr_size + 1;
 
 			if (rs_bind[i].buffer == NULL) {
 				finish_with_stmt_error(conn, stmt, "Cannot allocate output buffers\n", true);

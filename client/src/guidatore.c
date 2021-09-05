@@ -41,45 +41,34 @@ static void Calcola_prossima_tratta_veicolo(MYSQL* conn)
 	param[0].buffer_type = MYSQL_TYPE_LONG; // OUT
 	param[0].buffer = &tratta;
 	param[0].buffer_length = sizeof(tratta);
-
 	if (mysql_stmt_bind_result(distanza_stmt, param)) {
 		print_stmt_error(distanza_stmt, "Could not retrieve output parameter");
 		
 	}
-
 	// Retrieve output parameter
 	if (mysql_stmt_fetch(distanza_stmt)) {
 		print_stmt_error(distanza_stmt, "Could not buffer results");
-		
 	}
-	if (tratta != 0)
-	{
+	if (tratta != 0) {
 		printf("La prossima tratta del veicolo %i e' la  %i\n", veicolo,tratta);
 		system("pause");
 		mysql_stmt_close(distanza_stmt);
 		return;
 	}
-	else
-	{
+	else {
 		printf("Il veicolo non ha nessun altra tratta\n");
 		system("pause");
 		mysql_stmt_close(distanza_stmt);
 		return;
 	}
-	
-	
-
 	out:
 	mysql_stmt_close(distanza_stmt);
-
 }
 
 void run_as_conducente(MYSQL* conn) {
-	int s;
 	int i = 0;
 	int numero;
 	while (true) {
-
 		printf("-------------------------------------------------*** Cosa vuoi fare? ***-------------------------------------------------\n\n");
 		printf("1) Calcola prossima tratta del veicolo\n");
 		printf("2) Logout\n");
@@ -99,8 +88,5 @@ void run_as_conducente(MYSQL* conn) {
 			fprintf(stderr, "Invalid condition at %s:%d\n", __FILE__, __LINE__);
 			return;
 		}
-
-		
-		
 	}
 }

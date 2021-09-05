@@ -73,9 +73,10 @@ void login(MYSQL* conn) {
 	scanf_s("%s", &password, (unsigned int)sizeof password);
 	role_id = attempt_login(conn, username, password);
 	uint8_t login_info_index = 0;
-	for (uint8_t i = 0; i < sizeof login_info / sizeof * login_info; i++) {
+	for (uint8_t i = 1; i < sizeof login_info / sizeof * login_info; i++) {
 		if (login_info[i].role_id == role_id) {
 			login_info_index = i;
+			break;
 		}
 	}
 	printf("\n%s\n", login_info[login_info_index].login_message);
@@ -91,10 +92,10 @@ static uint8_t attempt_login(MYSQL* conn, const char* username, const char* pass
 	memset(out_param, 0, sizeof out_param);
 	in_param[0].buffer_type = MYSQL_TYPE_VAR_STRING;
 	in_param[0].buffer = (void*)username;
-	in_param[0].buffer_length = strlen(username);
+	in_param[0].buffer_length = (unsigned long)strlen(username);
 	in_param[1].buffer_type = MYSQL_TYPE_VAR_STRING;
 	in_param[1].buffer = (void*)password;
-	in_param[1].buffer_length = strlen(password);
+	in_param[1].buffer_length = (unsigned long)strlen(password);
 	out_param[0].buffer_type = MYSQL_TYPE_LONG;
 	out_param[0].buffer = &role;
 	out_param[0].buffer_length = sizeof role;

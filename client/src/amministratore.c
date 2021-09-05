@@ -281,7 +281,7 @@ static void Cambia_conducente_turno(MYSQL* conn) {
 
 	param[0].buffer_type = MYSQL_TYPE_VAR_STRING;  //IN
 	param[0].buffer = Conducente_CF;
-	param[0].buffer_length = strlen(Conducente_CF);
+	param[0].buffer_length = (unsigned long)strlen(Conducente_CF);
 
 	param[1].buffer_type = MYSQL_TYPE_DATE;  //IN
 	param[1].buffer = (char*)&data;
@@ -289,7 +289,7 @@ static void Cambia_conducente_turno(MYSQL* conn) {
 
 	param[2].buffer_type = MYSQL_TYPE_VAR_STRING;  //IN
 	param[2].buffer = Conducente_CF2;
-	param[2].buffer_length = strlen(Conducente_CF2);
+	param[2].buffer_length = (unsigned long)strlen(Conducente_CF2);
 
 
 
@@ -334,12 +334,10 @@ static size_t parse_avgs(MYSQL* conn, MYSQL_STMT* stmt, struct average_grades** 
 	param[0].buffer_type = MYSQL_TYPE_VAR_STRING;
 	param[0].buffer = CF;
 	param[0].buffer_length = 16;
-
 	/*Devo restiturilo nella store procedure*/
 	param[1].buffer_type = MYSQL_TYPE_DOUBLE;
 	param[1].buffer = &avg;
 	param[1].buffer_length = sizeof(avg);
-
 	if (mysql_stmt_bind_result(stmt, param)) {
 		finish_with_stmt_error(conn, stmt, "Unable to bind column parameters\n", true);
 	}
@@ -348,46 +346,36 @@ static size_t parse_avgs(MYSQL* conn, MYSQL_STMT* stmt, struct average_grades** 
 	/* assemble course general information */
 	while (true) {
 		status = mysql_stmt_fetch(stmt);
-
 		if (status == 1 || status == MYSQL_NO_DATA)
 			break;
-
 		strcpy_s((*ret)[row].CF,16, CF);
 		printf_s("%d) Conducente : %s\n",i,CF);
 		i++;
 		row++;
 	}
-
 	return row;
 }
-static size_t parse_avgss(MYSQL* conn, MYSQL_STMT* stmt, struct average_gradess** ret)
-{
 
+static size_t parse_avgss(MYSQL* conn, MYSQL_STMT* stmt, struct average_gradess** ret) {
 	int status;
 	size_t row = 0;
 	MYSQL_BIND param[2];
 	double avg;
 	int Matricola;
-
 	if (mysql_stmt_store_result(stmt)) {
 		fprintf(stderr, " mysql_stmt_execute(), 1 failed\n");
 		fprintf(stderr, " %s\n", mysql_stmt_error(stmt));
 		exit(0);
 	}
-
 	*ret = malloc(mysql_stmt_num_rows(stmt) * sizeof(struct average_gradess));
-
 	memset(param, 0, sizeof(param));
-
 	param[0].buffer_type = MYSQL_TYPE_LONG;
 	param[0].buffer = &Matricola;
 	param[0].buffer_length = 16;
-
 	/*Devo restiturilo nella store procedure*/
 	param[1].buffer_type = MYSQL_TYPE_DOUBLE;
 	param[1].buffer = &avg;
 	param[1].buffer_length = sizeof(avg);
-
 	if (mysql_stmt_bind_result(stmt, param)) {
 		finish_with_stmt_error(conn, stmt, "Unable to bind column parameters\n", true);
 	}
@@ -396,40 +384,32 @@ static size_t parse_avgss(MYSQL* conn, MYSQL_STMT* stmt, struct average_gradess*
 	/* assemble course general information */
 	while (true) {
 		status = mysql_stmt_fetch(stmt);
-
 		if (status == 1 || status == MYSQL_NO_DATA)
 			break;
-
 		(*ret)[row].Matricola = Matricola;
 		printf_s("%d) Veicolo : %d\n", i, Matricola);
 		i++;
 		row++;
 	}
-
 	return row;
 }
-static void Visualizza_conducenti_attivi(MYSQL* conn) {
 
+static void Visualizza_conducenti_attivi(MYSQL* conn) {
 	MYSQL_STMT* Visualizza_conducenti;
 	int status;
 	bool first = true;
 	struct average_grades *avgs=NULL; /*DEVO TOGLIERE IL NULL MA MI DA ERRORE*/
 	size_t conducenti = 0;
 	char header[512];
-
 	// Prepare stored procedure call
 	if (!setup_prepared_stmt(&Visualizza_conducenti, "call Visualizza_conducenti_attivi()", conn)) {
 		finish_with_stmt_error(conn, Visualizza_conducenti, "Unable to initialize career report statement\n", false);
 	}
-
-	
-
 	// Run procedure
 	if (mysql_stmt_execute(Visualizza_conducenti) != 0) {
 		print_stmt_error(Visualizza_conducenti, "An error occurred while retrieving the career report.");
 		goto out;
 	}
-
 	// We have multiple result sets here!
 	do {
 		// Skip OUT variables (although they are not present in the procedure...)
@@ -446,7 +426,6 @@ static void Visualizza_conducenti_attivi(MYSQL* conn) {
 			dump_result_set(conn, Visualizza_conducenti, header);
 			conducenti++;
 		}
-
 		// more results? -1 = no, >0 = error, 0 = yes (keep looking)
 	next:
 		status = mysql_stmt_next_result(Visualizza_conducenti);
@@ -454,11 +433,10 @@ static void Visualizza_conducenti_attivi(MYSQL* conn) {
 			finish_with_stmt_error(conn, Visualizza_conducenti, "Unexpected condition", true);
 
 	} while (status == 0);
-
 out:
 	mysql_stmt_close(Visualizza_conducenti);
-
 }
+
 static void Visualizza_conducenti_fermi(MYSQL* conn) {
 
 	MYSQL_STMT* Visualizza_conducenti_f;
@@ -467,27 +445,21 @@ static void Visualizza_conducenti_fermi(MYSQL* conn) {
 	struct average_grades* avgs = NULL; /*DEVO TOGLIERE IL NULL MA MI DA ERRORE*/
 	size_t conducenti = 0;
 	char header[512];
-
 	// Prepare stored procedure call
 	if (!setup_prepared_stmt(&Visualizza_conducenti_f, "call Visualizza_conducenti_fermi()", conn)) {
 		finish_with_stmt_error(conn, Visualizza_conducenti_f, "Unable to initialize career report statement\n", false);
 	}
-
-
-
 	// Run procedure
 	if (mysql_stmt_execute(Visualizza_conducenti_f) != 0) {
 		print_stmt_error(Visualizza_conducenti_f, "An error occurred while retrieving the career report.");
 		goto out;
 	}
-
 	// We have multiple result sets here!
 	do {
 		// Skip OUT variables (although they are not present in the procedure...)
 		if (conn->server_status & SERVER_PS_OUT_PARAMS) {
 			goto next;
 		}
-
 		if (first) {
 			parse_avgs(conn, Visualizza_conducenti_f, &avgs);
 			first = false;
@@ -497,19 +469,16 @@ static void Visualizza_conducenti_fermi(MYSQL* conn) {
 			dump_result_set(conn, Visualizza_conducenti_f, header);
 			conducenti++;
 		}
-
 		// more results? -1 = no, >0 = error, 0 = yes (keep looking)
 	next:
 		status = mysql_stmt_next_result(Visualizza_conducenti_f);
 		if (status > 0)
 			finish_with_stmt_error(conn, Visualizza_conducenti_f, "Unexpected condition", true);
-
 	} while (status == 0);
-
 out:
 	mysql_stmt_close(Visualizza_conducenti_f);
-
 }
+
 static void Visualizza_veicoli_attivi(MYSQL* conn) {
 	MYSQL_STMT* Visualizza_veicoli;
 	int status;
@@ -517,27 +486,21 @@ static void Visualizza_veicoli_attivi(MYSQL* conn) {
 	struct average_gradess* avgs = NULL; 
 	size_t veicoli = 0;
 	char header[512];
-
 	// Prepare stored procedure call
 	if (!setup_prepared_stmt(&Visualizza_veicoli, "call Visualizza_veicoli_attivi()", conn)) {
 		finish_with_stmt_error(conn, Visualizza_veicoli, "Unable to initialize career report statement\n", false);
 	}
-
-
-
 	// Run procedure
 	if (mysql_stmt_execute(Visualizza_veicoli) != 0) {
 		print_stmt_error(Visualizza_veicoli, "An error occurred while retrieving the career report.");
 		goto out;
 	}
-
 	// We have multiple result sets here!
 	do {
 		// Skip OUT variables (although they are not present in the procedure...)
 		if (conn->server_status & SERVER_PS_OUT_PARAMS) {
 			goto next;
 		}
-
 		if (first) {
 			parse_avgss(conn, Visualizza_veicoli, &avgs);
 			first = false;
@@ -547,7 +510,6 @@ static void Visualizza_veicoli_attivi(MYSQL* conn) {
 			dump_result_set(conn, Visualizza_veicoli, header);
 			veicoli++;
 		}
-
 		// more results? -1 = no, >0 = error, 0 = yes (keep looking)
 	next:
 		status = mysql_stmt_next_result(Visualizza_veicoli);
@@ -573,8 +535,6 @@ static void Visualizza_veicoli_fermi(MYSQL* conn) {
 		finish_with_stmt_error(conn, Visualizza_veicoli_f, "Unable to initialize career report statement\n", false);
 	}
 
-
-
 	// Run procedure
 	if (mysql_stmt_execute(Visualizza_veicoli_f) != 0) {
 		print_stmt_error(Visualizza_veicoli_f, "An error occurred while retrieving the career report.");
@@ -587,7 +547,6 @@ static void Visualizza_veicoli_fermi(MYSQL* conn) {
 		if (conn->server_status & SERVER_PS_OUT_PARAMS) {
 			goto next;
 		}
-
 		if (first) {
 			parse_avgss(conn, Visualizza_veicoli_f, &avgs);
 			first = false;
@@ -597,18 +556,18 @@ static void Visualizza_veicoli_fermi(MYSQL* conn) {
 			dump_result_set(conn, Visualizza_veicoli_f, header);
 			veicoli++;
 		}
-
 		// more results? -1 = no, >0 = error, 0 = yes (keep looking)
 	next:
 		status = mysql_stmt_next_result(Visualizza_veicoli_f);
 		if (status > 0)
 			finish_with_stmt_error(conn, Visualizza_veicoli_f, "Unexpected condition", true);
-
 	} while (status == 0);
 
 out:
 	mysql_stmt_close(Visualizza_veicoli_f);
-} /*SBAGLIA IL CODICE DEI VEICOLI*/
+}
+
+/*SBAGLIA IL CODICE DEI VEICOLI*/
 static void Elimina_conducente(MYSQL* conn) {
 	MYSQL_STMT* Elimina;
 	MYSQL_BIND param[2];
@@ -618,22 +577,17 @@ static void Elimina_conducente(MYSQL* conn) {
 	scanf_s("%s", codice,16);
 	printf("Inserisci il numero della patente : ");
 	scanf_s("%s",patente,10);
-
 	if (!setup_prepared_stmt(&Elimina, "call Elimina_conducente(?, ?)", conn)) {
 		print_stmt_error(Elimina, "Unable to initialize login statement\n");
 	}
-
 	// Prepare parameters
 	memset(param, 0, sizeof(param));
-
 	param[0].buffer_type = MYSQL_TYPE_VAR_STRING;  //IN
 	param[0].buffer = codice;
 	param[0].buffer_length = strlen(codice);
-
 	param[1].buffer_type = MYSQL_TYPE_VAR_STRING;  //IN
 	param[1].buffer = patente;
 	param[1].buffer_length = strlen(patente);
-
 	if (mysql_stmt_bind_param(Elimina, param) != 0) {
 		finish_with_stmt_error(conn, Elimina, "Could not bind parameters for career report\n", true);
 	}
@@ -646,20 +600,17 @@ static void Elimina_conducente(MYSQL* conn) {
 	system("pause");
 	mysql_stmt_close(Elimina);
 	return;
-
-
 out:
 	mysql_stmt_close(Elimina);
+}
 
-} /*MI CONFERMA IL TUTTO MA NON LO ELIMINA SUL DATABASE*/
+/*MI CONFERMA IL TUTTO MA NON LO ELIMINA SUL DATABASE*/
 static void Emetti_biglietto(MYSQL* conn) {
 	MYSQL_STMT* EmettiB=NULL;
 	int biglietti;
 	printf("Inserisci il numero di biglietti da emettere : ");
 	scanf_s("%d", &biglietti);
-
-	for (int j = 0; j < biglietti; j++)
-	{
+	for (int j = 0; j < biglietti; j++)	{
 		if (!setup_prepared_stmt(&EmettiB, "call Emetti_biglietto()", conn)) {
 			print_stmt_error(EmettiB, "Unable to initialize login statement\n");
 		}
@@ -676,14 +627,13 @@ static void Emetti_biglietto(MYSQL* conn) {
 out:
 	mysql_stmt_close(EmettiB);
 }
+
 static void Emetti_abbonamenti(MYSQL* conn) {
 	MYSQL_STMT* EmettiA=NULL;
 	int abbonamenti;
 	printf("Inserisci il numero di biglietti da emettere : ");
 	scanf_s("%d", &abbonamenti);
-
-	for (int j = 0; j < abbonamenti; j++)
-	{
+	for (int j = 0; j < abbonamenti; j++) {
 		if (!setup_prepared_stmt(&EmettiA, "call Emetti_abbonamenti()", conn)) {
 			print_stmt_error(EmettiA, "Unable to initialize login statement\n");
 		}
@@ -700,73 +650,53 @@ static void Emetti_abbonamenti(MYSQL* conn) {
 out:
 	mysql_stmt_close(EmettiA);
 }
-static void Aggiungi_utente(MYSQL* conn)
-{
+
+static void Aggiungi_utente(MYSQL* conn) {
 	MYSQL_STMT* distanza_stmt;
 	MYSQL_BIND param[3];
-	
 	char username[45];
 	char password[45];
 	char ruolo[45];
-
-
 	printf("Inserisci l'username : ");
 	scanf_s("%s", username,45);
 	printf("Inserisci la password (e' consigliato usare pippo) : ");
 	scanf_s("%s", password,45);
 	printf("Inserisci il ruolo (AMMINISTRATORE|CONDUCENTE|PASSEGGERO) : ");
 	scanf_s("%s", ruolo,45);
-	
-	
-
 	if (!setup_prepared_stmt(&distanza_stmt, "call Aggiungi_utente(?, ?, ?)", conn)) {
 		print_stmt_error(distanza_stmt, "Unable to initialize login statement\n");
 	}
-
 	// Prepare parameters
 	memset(param, 0, sizeof(param));
-
 	param[0].buffer_type = MYSQL_TYPE_VAR_STRING;  //IN
 	param[0].buffer = username;
 	param[0].buffer_length = strlen(username);
-
 	param[1].buffer_type = MYSQL_TYPE_VAR_STRING;  //IN
 	param[1].buffer = password;
 	param[1].buffer_length = strlen(password);
-
 	param[2].buffer_type = MYSQL_TYPE_VAR_STRING;  //IN
 	param[2].buffer = ruolo;
 	param[2].buffer_length = strlen(ruolo);
-
 	if (mysql_stmt_bind_param(distanza_stmt, param) != 0) {
 		finish_with_stmt_error(conn, distanza_stmt, "Could not bind parameters for career report\n", true);
 	}
-
 	// Run procedure
 	if (mysql_stmt_execute(distanza_stmt) != 0) {
 		print_stmt_error(distanza_stmt, "An error occurred while retrieving the career report.");
 		goto out;
 	}
-
-
 	printf("Hai aggiunto : Username %s, Ruolo: %s\n", username, ruolo);
 	system("pause");
 	mysql_stmt_close(distanza_stmt);
 	return;
-
-
 out:
 	mysql_stmt_close(distanza_stmt);
-
 }
 
-void run_as_administrator(MYSQL* conn)
-{
-	int s;
+void run_as_administrator(MYSQL* conn) {
 	int i = 0;
 	int numero;
 	while (true) {
-
 		printf("------------------------------*** Cosa vuoi fare? ***------------------------------\n\n");
 		printf("1) Assegna turno ad un conducente\n");
 		printf("2) Assegna un veicolo ad una tratta\n");
@@ -783,8 +713,7 @@ void run_as_administrator(MYSQL* conn)
 		printf("13) Logout\n");
 		printf("SCELTA: ");
 		scanf_s("%i", &numero);
-		switch (numero)
-		{
+		switch (numero) {
 		case 1:
 			printf("-----------------------------------------------Assegna_turno_al_conducente-----------------------------------------\n");
 			Assegna_turno_al_conducente(conn);

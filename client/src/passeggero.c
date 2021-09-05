@@ -10,8 +10,8 @@ struct average_grades {
 	int longitudineI;
 	double avg;
 };
-float ftemp;
-float ftemp2;
+static double ftemp;
+static double ftemp2;
 
 static void Timbra_biglietto(MYSQL* conn) {
 	MYSQL_STMT* TimbraB;
@@ -25,26 +25,20 @@ static void Timbra_biglietto(MYSQL* conn) {
 	scanf_s("%d", &veicolo);
 	printf("Quale tratta stai percorrendo : ");
 	scanf_s("%d", &tratta);
-
 	if (!setup_prepared_stmt(&TimbraB, "call Timbra_biglietto(?, ?, ?)", conn)) {
 		print_stmt_error(TimbraB, "Unable to initialize login statement\n");
 	}
-
 	// Prepare parameters
 	memset(param, 0, sizeof(param));
-
 	param[0].buffer_type = MYSQL_TYPE_LONG;  //IN
 	param[0].buffer = &biglietto;
 	param[0].buffer_length = sizeof(biglietto);
-
 	param[1].buffer_type = MYSQL_TYPE_LONG;  //IN
 	param[1].buffer = &tratta;
 	param[1].buffer_length = sizeof(tratta);
-
 	param[2].buffer_type = MYSQL_TYPE_LONG;  //IN
 	param[2].buffer = &veicolo;
 	param[2].buffer_length = sizeof(veicolo);
-
 	if (mysql_stmt_bind_param(TimbraB, param) != 0) {
 		finish_with_stmt_error(conn, TimbraB, "Could not bind parameters for career report\n", true);
 	}
@@ -57,8 +51,6 @@ static void Timbra_biglietto(MYSQL* conn) {
 	system("pause");
 	mysql_stmt_close(TimbraB);
 	return;
-
-
 out:
 	mysql_stmt_close(TimbraB);
 }
@@ -74,26 +66,20 @@ static void Convalida_abbonamento(MYSQL* conn) {
 	scanf_s("%d", &veicolo);
 	printf("Quale tratta stai percorrendo : ");
 	scanf_s("%d", &tratta);
-
 	if (!setup_prepared_stmt(&TimbraA, "call Convalida_abbonamento(?, ?, ?)", conn)) {
 		print_stmt_error(TimbraA, "Unable to initialize login statement\n");
 	}
-
 	// Prepare parameters
 	memset(param, 0, sizeof(param));
-
 	param[0].buffer_type = MYSQL_TYPE_LONG;  //IN
 	param[0].buffer = &abbonamento;
 	param[0].buffer_length = sizeof(abbonamento);
-
 	param[1].buffer_type = MYSQL_TYPE_LONG;  //IN
 	param[1].buffer = &tratta;
 	param[1].buffer_length = sizeof(tratta);
-
 	param[2].buffer_type = MYSQL_TYPE_LONG;  //IN
 	param[2].buffer = &veicolo;
 	param[2].buffer_length = sizeof(veicolo);
-
 	if (mysql_stmt_bind_param(TimbraA, param) != 0) {
 		finish_with_stmt_error(conn, TimbraA, "Could not bind parameters for career report\n", true);
 	}
@@ -117,7 +103,6 @@ static size_t parse_avgs(MYSQL* conn, MYSQL_STMT* stmt, struct average_grades** 
 	int status;
 	size_t row = 0;
 	MYSQL_BIND param[3];
-	double avg;
 	char latitudine[12];
 	char longitudine[12];
 	int veicolo;
@@ -242,11 +227,9 @@ out:
 
 void run_as_passeggero(MYSQL* conn)
 {
-	int s;
 	int i = 0;
 	int numero;
 	while (true) {
-
 		printf("------------------------------*** Cosa vuoi fare? ***------------------------------\n\n");
 		printf("1) Timbra un biglietto\n");
 		printf("2) Convalida un abbonamento\n");
@@ -254,8 +237,7 @@ void run_as_passeggero(MYSQL* conn)
 		printf("4) Logout\n");
 		printf("SCELTA: ");
 		scanf_s("%i", &numero);
-		switch (numero)
-		{
+		switch (numero)	{
 		case 1:
 			printf("---------------------------Timbra un biglietto--------------------------------------------\n");
 			Timbra_biglietto(conn);
@@ -284,22 +266,15 @@ void run_as_passeggero(MYSQL* conn)
 				printf("\nIl veicolo si trova a %f Km di distanza\n risultato ", risultato);
 				break;
 			}
-			else
-			{
+			else {
 				break;
 			}
-			
 		case 4:
 			printf("----------------------------------------Logout----------------------------------------\n");
 			return;
-
 		default:
 			fprintf(stderr, "Invalid condition at %s:%d\n", __FILE__, __LINE__);
 			return;
 		}
-
-
-
 	}
-	
 }
