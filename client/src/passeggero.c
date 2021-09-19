@@ -208,10 +208,8 @@ static void Calcola_distanza_veicolo(MYSQL* conn) {
 		else {
 			sprintf_s(header, 512, "\nI veicoli si trovano: " ,avgs[latitudineI].latitudineI, avgs[longitudineI].longitudineI);
 			dump_result_set(conn, Distanza, header);
-
 			latitudineI++;
 			longitudineI++;
-			
 		}
 		// more results? -1 = no, >0 = error, 0 = yes (keep looking)
 	next:
@@ -230,7 +228,7 @@ void run_as_passeggero(MYSQL* conn)
 	int i = 0;
 	int numero;
 	while (true) {
-		printf("------------------------------*** Cosa vuoi fare? ***------------------------------\n\n");
+		printf("Cosa vuoi fare?\n\n");
 		printf("1) Timbra un biglietto\n");
 		printf("2) Convalida un abbonamento\n");
 		printf("3) Calcola distanza veicolo\n");
@@ -239,15 +237,15 @@ void run_as_passeggero(MYSQL* conn)
 		scanf_s("%i", &numero);
 		switch (numero)	{
 		case 1:
-			printf("---------------------------Timbra un biglietto--------------------------------------------\n");
+			printf("Timbra un biglietto\n");
 			Timbra_biglietto(conn);
 			break;
 		case 2:
-			printf("---------------------------------------------Convalida un abbonamento---------------------------------------------\n");
+			printf("Convalida un abbonamento\n");
 			Convalida_abbonamento(conn);
 			break;
 		case 3:
-			printf("---------------------------------------------Calcola distanza veicolo--------------------------------------------\n");
+			printf("Calcola distanza veicolo\n");
 			Calcola_distanza_veicolo(conn);
 			float lat;
 			float lon;
@@ -270,7 +268,7 @@ void run_as_passeggero(MYSQL* conn)
 				break;
 			}
 		case 4:
-			printf("----------------------------------------Logout----------------------------------------\n");
+			printf("Logout\n");
 			return;
 		default:
 			fprintf(stderr, "Invalid condition at %s:%d\n", __FILE__, __LINE__);

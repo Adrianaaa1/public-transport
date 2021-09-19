@@ -398,7 +398,7 @@ static void Visualizza_conducenti_attivi(MYSQL* conn) {
 	MYSQL_STMT* Visualizza_conducenti;
 	int status;
 	bool first = true;
-	struct average_grades *avgs=NULL; /*DEVO TOGLIERE IL NULL MA MI DA ERRORE*/
+	struct average_grades *avgs=NULL; 
 	size_t conducenti = 0;
 	char header[512];
 	// Prepare stored procedure call
@@ -442,7 +442,7 @@ static void Visualizza_conducenti_fermi(MYSQL* conn) {
 	MYSQL_STMT* Visualizza_conducenti_f;
 	int status;
 	bool first = true;
-	struct average_grades* avgs = NULL; /*DEVO TOGLIERE IL NULL MA MI DA ERRORE*/
+	struct average_grades* avgs = NULL; 
 	size_t conducenti = 0;
 	char header[512];
 	// Prepare stored procedure call
@@ -521,7 +521,7 @@ static void Visualizza_veicoli_attivi(MYSQL* conn) {
 out:
 	mysql_stmt_close(Visualizza_veicoli);
 
-} /*SBAGLIA IL CODICE DEI VEICOLI*/
+} 
 static void Visualizza_veicoli_fermi(MYSQL* conn) {
 	MYSQL_STMT* Visualizza_veicoli_f;
 	int status;
@@ -567,7 +567,7 @@ out:
 	mysql_stmt_close(Visualizza_veicoli_f);
 }
 
-/*SBAGLIA IL CODICE DEI VEICOLI*/
+
 static void Elimina_conducente(MYSQL* conn) {
 	MYSQL_STMT* Elimina;
 	MYSQL_BIND param[2];
@@ -604,7 +604,6 @@ out:
 	mysql_stmt_close(Elimina);
 }
 
-/*MI CONFERMA IL TUTTO MA NON LO ELIMINA SUL DATABASE*/
 static void Emetti_biglietto(MYSQL* conn) {
 	MYSQL_STMT* EmettiB=NULL;
 	int biglietti;
@@ -697,7 +696,7 @@ void run_as_administrator(MYSQL* conn) {
 	int i = 0;
 	int numero;
 	while (true) {
-		printf("------------------------------*** Cosa vuoi fare? ***------------------------------\n\n");
+		printf(" Cosa vuoi fare? \n\n");
 		printf("1) Assegna turno ad un conducente\n");
 		printf("2) Assegna un veicolo ad una tratta\n");
 		printf("3) Assumi un conducente\n");
@@ -715,55 +714,55 @@ void run_as_administrator(MYSQL* conn) {
 		scanf_s("%i", &numero);
 		switch (numero) {
 		case 1:
-			printf("-----------------------------------------------Assegna_turno_al_conducente-----------------------------------------\n");
+			printf("Assegna_turno_al_conducente\n");
 			Assegna_turno_al_conducente(conn);
 			break;
 		case 2:
-			printf("---------------------------------------------Assegna_veicolo_alla_tratta-------------------------------------------\n");
+			printf("Assegna_veicolo_alla_tratta\n");
 			Assegna_veicolo_alla_tratta(conn);
 			break;
 		case 3:
-			printf("---------------------------------------------Assumi_conducente------------------------------------------------------\n");
+			printf("Assumi_conducente\n");
 			Assumi_conducente(conn);
 			break;
 		case 4:
-			printf("---------------------------------------------Cambia_conducente_turno------------------------------------------------\n");
+			printf("Cambia_conducente_turno\n");
 			Cambia_conducente_turno(conn);
 			break;
 		case 5:
-			printf("---------------------------------------------Visualizza_conducenti_attivi-------------------------------------------\n");
+			printf("Visualizza_conducenti_attivi\n");
 			Visualizza_conducenti_attivi(conn);
 			break;
 		case 6:
-			printf("---------------------------------------------Visualizza_conducenti_fermi--------------------------------------------\n");
+			printf("Visualizza_conducenti_fermi\n");
 			Visualizza_conducenti_fermi(conn);
 			break;
 		case 7:
-			printf("---------------------------------------------Visualizza_veicoli_attivi----------------------------------------------\n");
+			printf("Visualizza_veicoli_attivi\n");
 			Visualizza_veicoli_attivi(conn);
 			break;
 		case 8:
-			printf("---------------------------------------------Visualizza_veicoli_fermi-----------------------------------------------\n");
+			printf("Visualizza_veicoli_fermi\n");
 			Visualizza_veicoli_fermi(conn);
 			break;
 		case 9:
-			printf("---------------------------------------------Elimina_conducente-----------------------------------------------------\n");
+			printf("Elimina_conducente\n");
 			Elimina_conducente(conn);
 			break;
 		case 10:
-			printf("---------------------------------------------Emetti_biglietto-------------------------------------------------------\n");
+			printf("Emetti_biglietto\n");
 			Emetti_biglietto(conn);
 			break;
 		case 11:
-			printf("---------------------------------------------Emetti_abbonamenti-----------------------------------------------------\n");
+			printf("Emetti_abbonamenti\n");
 			Emetti_abbonamenti(conn);
 			break;
 		case 12:
-			printf("---------------------------------------------Aggiungi utente-----------------------------------------------------\n");
+			printf("Aggiungi utente\n");
 			Aggiungi_utente(conn);
 			break;
 		case 13:
-			printf("---------------------------------------------------------Logout---------------------------------------------------------\n");
+			printf("Logout\n");
 			return;
 		default:
 			fprintf(stderr, "Invalid condition at %s:%d\n", __FILE__, __LINE__);
